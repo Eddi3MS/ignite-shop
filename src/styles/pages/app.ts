@@ -8,13 +8,5 @@ export const Container = styled('div', {
   minHeight: '100vh'
 })
 
-export const Header = styled('header', {
-  paddingBlock: '2rem',
-  width: '100%',
-  maxWidth: 1180,
-  marginInline: 'auto',
 
-  img: {
-    cursor: 'pointer'
-  }
-})
+

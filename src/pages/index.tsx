@@ -1,85 +1,139 @@
-import Image from "next/future/image";
-import { HomeContainer, Product } from "../styles/pages/home";
+import Image from 'next/future/image'
+import { HomeContainer, Product, SliderContainer } from '../styles/pages/home'
 
-import Stripe from "stripe";
+import 'keen-slider/keen-slider.min.css'
+import { stripe } from '../lib/stripe'
+import { GetStaticProps } from 'next'
+import Stripe from 'stripe'
+import Link from 'next/link'
+import Head from 'next/head'
 
-import { useKeenSlider } from "keen-slider/react";
-
-import "keen-slider/keen-slider.min.css";
-import { stripe } from "../lib/stripe";
-import { GetStaticProps } from "next";
-import Link from "next/link";
+import useEmblaCarousel from 'embla-carousel-react'
+import { MouseEvent, useEffect, useState } from 'react'
+import { CartContext, IProduct } from '../contexts/CartContext'
+import { CartButton, ProductSkeleton } from '../components'
+import { useContextSelector } from 'use-context-selector'
 
 interface IHomeProps {
-  products: {
-    id: string;
-    name: string;
-    imageUrl: string;
-    price: string;
-  }[];
+  products: IProduct[]
 }
 
 export default function Home({ products }: IHomeProps) {
-  const [sliderRef] = useKeenSlider({
-    breakpoints: {
-      "(min-width: 400px)": {
-        slides: { perView: 1.4, spacing: 32 },
-      },
-      "(min-width: 1000px)": {
-        slides: { perView: 2.4, spacing: 48 },
-      },
-    },
-    slides: {
-      perView: 1.2,
-      spacing: 16,
-    },
-  });
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    // fake loading to use the skeleton loading from figma
+    const timeOut = setTimeout(() => setIsLoading(false), 2000)
+
+    return () => clearTimeout(timeOut)
+  }, [])
+
+  const [emblaRef] = useEmblaCarousel({
+    align: 'start',
+    skipSnaps: false,
+    dragFree: true,
+  })
+
+  const { addToCart, checkIfItemAlreadyExists } = useContextSelector(
+    CartContext,
+    (state) => ({
+      addToCart: state.addToCart,
+      checkIfItemAlreadyExists: state.checkIfItemAlreadyExists,
+    })
+  )
+
+  function handleAddToCart(
+    e: MouseEvent<HTMLButtonElement>,
+    product: IProduct
+  ) {
+    e.preventDefault()
+    addToCart(product)
+  }
 
   return (
-    <HomeContainer ref={sliderRef} className="keen-slider">
-      {products.map((product) => (
-        <Link
-          href={`/products/${product.id}`}
-          key={product.id}
-          prefetch={false}
-        >
-          <Product className="keen-slider__slide">
-            <Image src={product.imageUrl} width={520} height={480} alt="" />
+    <>
+      <Head>
+        <title>Home | Ignite Shop</title>
+      </Head>
 
-            <footer>
-              <strong>{product.name}</strong>
-              <span>{product.price}</span>
-            </footer>
-          </Product>
-        </Link>
-      ))}
-    </HomeContainer>
-  );
+      <div style={{ overflow: 'hidden', width: '100%' }}>
+        <HomeContainer>
+          <div className='embla' ref={emblaRef}>
+            <SliderContainer className='embla__container container'>
+              {isLoading ? (
+                <>
+                  <ProductSkeleton className='embla__slide' />
+                  <ProductSkeleton className='embla__slide' />
+                  <ProductSkeleton className='embla__slide' />
+                </>
+              ) : (
+                <>
+                  {products.map((product) => (
+                    <Link
+                      key={product.id}
+                      href={`/product/${product.id}`}
+                      prefetch={false}
+                      passHref
+                    >
+                      <Product className='embla__slide'>
+                        <Image
+                          src={product.imageUrl}
+                          width={520}
+                          height={480}
+                          alt=''
+                          placeholder='blur'
+                          blurDataURL={product.imageUrl}
+                        />
+
+                        <footer>
+                          <div>
+                            <strong>{product.name}</strong>
+                            <span>{product.price}</span>
+                          </div>
+                          <CartButton
+                            size='large'
+                            color='green'
+                            disabled={checkIfItemAlreadyExists(product.id)}
+                            onClick={(e) => handleAddToCart(e, product)}
+                          />
+                        </footer>
+                      </Product>
+                    </Link>
+                  ))}
+                </>
+              )}
+            </SliderContainer>
+          </div>
+        </HomeContainer>
+      </div>
+    </>
+  )
 }
 
 export const getStaticProps: GetStaticProps = async () => {
   const response = await stripe.products.list({
-    expand: ["data.default_price"],
-  });
+    expand: ['data.default_price'],
+  })
 
-  const products = response.data.map((prod) => {
-    const price = prod.default_price as Stripe.Price;
-
+  const products = response.data.map((product) => {
+    const price = product.default_price as Stripe.Price
     return {
-      id: prod.id,
-      name: prod.name,
-      imageUrl: prod.images[0],
-      price: new Intl.NumberFormat("pt-BR", {
-        style: "currency",
-        currency: "BRL",
+      id: product.id,
+      name: product.name,
+      imageUrl: product.images[0],
+      price: new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
       }).format(price.unit_amount / 100),
-    };
-  });
+      numberPrice: price.unit_amount / 100,
+      defaultPriceId: price.id,
+    }
+  })
 
   return {
     props: {
       products,
     },
-    revalidate: 60 * 60 * 2, // 2 horas
-  };
-};
+    revalidate: 60 * 60 * 2, // 2 hours,
+  }
+}
