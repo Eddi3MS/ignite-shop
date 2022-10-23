@@ -8,4 +8,5 @@ Techs utilizadas:
 - STRIPE (pagamentos e cadastro de produtos)
 - AXIOS (integração entre api / stripe e a aplicação)
 - Stitches (CSS-in-js)
-- Keen-slider
+- embla-carousel-react
+- useContextSelector
