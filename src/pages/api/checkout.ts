@@ -23,7 +23,53 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     line_items: products.map((product) => ({
       price: product.defaultPriceId,
       quantity: 1,
-    }))
+    })),
+    shipping_address_collection: {
+      allowed_countries: ['BR'],
+    },
+    shipping_options: [
+      {
+        shipping_rate_data: {
+          type: 'fixed_amount',
+          fixed_amount: {
+            amount: 2500,
+            currency: 'brl',
+          },
+          display_name: 'Entrega Padrão',
+          delivery_estimate: {
+            minimum: {
+              unit: 'business_day',
+              value: 7,
+            },
+            maximum: {
+              unit: 'business_day',
+              value: 21,
+            },
+          }
+        }
+      },
+      {
+        shipping_rate_data: {
+          type: 'fixed_amount',
+          fixed_amount: {
+            amount: 5500,
+            currency: 'brl',
+          },
+          display_name: 'Sedex',
+
+          delivery_estimate: {
+            minimum: {
+              unit: 'business_day',
+              value: 4,
+            },
+            maximum: {
+              unit: 'business_day',
+              value: 12,
+            },
+          }
+        }
+      },
+    ],
   })
 
   return res.status(201).json({
