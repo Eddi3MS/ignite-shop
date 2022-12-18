@@ -4,7 +4,13 @@ const nextConfig = {
   swcMinify: true,
 
   images: {
-    domains: ["files.stripe.com"],
+    domains: ['files.stripe.com'],
+  },
+
+  env: {
+    NEXT_PUBLIC_URL: process.env.NEXT_PUBLIC_URL,
+    STRIPE_PUBLIC_KEY: process.env.STRIPE_PUBLIC_KEY,
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
   },
 
   experimental: {
@@ -13,6 +19,6 @@ const nextConfig = {
       allowFutureImage: true,
     },
   },
-};
+}
 
-module.exports = nextConfig;
+module.exports = nextConfig
