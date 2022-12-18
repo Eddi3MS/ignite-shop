@@ -1,7 +1,6 @@
 import Image from 'next/future/image'
 import { HomeContainer, Product, SliderContainer } from '../styles/pages/home'
 
-import 'keen-slider/keen-slider.min.css'
 import { stripe } from '../lib/stripe'
 import { GetStaticProps } from 'next'
 import Stripe from 'stripe'
